@@ -83,7 +83,7 @@ func TestAppender(t *testing.T) {
 }
 func TestLogStats(t *testing.T) {
 	os.RemoveAll("_testdir")
-	c := NewCollector("_testdir", time.UTC)
+	c := New(Dir("_testdir"), Location(time.UTC))
 	ts := func(s string) time.Time {
 		t, _ := time.Parse("2006-01-02 15:04", s)
 		return t

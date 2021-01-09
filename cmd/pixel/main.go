@@ -38,7 +38,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	c := nullitics.NewCollector(*dir, location)
+	c := nullitics.New(nullitics.Dir(*dir), nullitics.Location(location))
 	report := c.Report()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

@@ -23,8 +23,17 @@ type Collector struct {
 	history  *Stats
 }
 
-func NewCollector(dir string, loc *time.Location) *Collector {
-	return &Collector{dir: dir, location: loc}
+type Option func(c *Collector)
+
+func Dir(dir string) Option              { return func(c *Collector) { c.dir = dir } }
+func Location(loc *time.Location) Option { return func(c *Collector) { c.location = loc } }
+
+func New(options ...Option) *Collector {
+	c := &Collector{}
+	for _, opt := range options {
+		opt(c)
+	}
+	return c
 }
 
 func date(t time.Time) time.Time {
@@ -165,7 +174,7 @@ func randomString(n int) string {
 	return string(b)
 }
 
-var DefaultCollector = NewCollector("nullitics", time.Local)
+var DefaultCollector = New(Dir("nullitics"), Location(time.Local))
 var DefaultSalt = randomString(32)
 
 var Now = time.Now
