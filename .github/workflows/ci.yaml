@@ -1,0 +1,24 @@
+name: CI Pipeline
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Run tests
+        run: go test -v -race ./...
+      - name: Run lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.29
+      - name: Build examples
+        env:
+          CGO_ENABLED: 0
+        run: |
+          go build -o example ./cmd/example
+          go build -o pixel ./cmd/pixel
