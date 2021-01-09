@@ -2,6 +2,7 @@ package nullitics
 
 import (
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -155,13 +156,23 @@ func (c *Collector) Report() http.Handler {
 	})
 }
 
+func randomString(n int) string {
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
 var DefaultCollector = NewCollector("nullitics", time.Local)
+var DefaultSalt = randomString(32)
 
 var Now = time.Now
 
 func Collect(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = DefaultCollector.Add(Page(r))
+		_ = DefaultCollector.Add(Page(r, DefaultSalt))
 		h.ServeHTTP(w, r)
 	})
 }

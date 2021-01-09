@@ -52,13 +52,13 @@ func session(r *http.Request, salt string) string {
 	return hex.EncodeToString(hash[:4])
 }
 
-func API(r *http.Request) *Hit {
+func API(r *http.Request, salt string) *Hit {
 	u, err := url.Parse(r.Referer())
 	if err != nil {
 		return &Hit{}
 	}
 
-	hit := &Hit{Timestamp: Now(), URI: u.Path, Session: session(r, "")}
+	hit := &Hit{Timestamp: Now(), URI: u.Path, Session: session(r, salt)}
 
 	// Referrer can be passed via "r" of the referrer, or "utm_source" of the actual page
 	if ref := r.URL.Query().Get("r"); ref != "" {
@@ -71,7 +71,7 @@ func API(r *http.Request) *Hit {
 	return hit
 }
 
-func Page(r *http.Request) *Hit {
+func Page(r *http.Request, salt string) *Hit {
 	path := r.URL.Path
 	ref := r.URL.Query().Get("utm_source")
 	if ref == "" {
@@ -81,7 +81,7 @@ func Page(r *http.Request) *Hit {
 	return &Hit{
 		Timestamp: time.Now(),
 		URI:       path,
-		Session:   session(r, ""),
+		Session:   session(r, salt),
 		Ref:       ref,
 		Country:   cn,
 		Device:    device(r),

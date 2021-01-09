@@ -87,20 +87,11 @@ func TestFrameGrow(t *testing.T) {
 }
 
 func TestStats(t *testing.T) {
-	uid := func() string {
-		letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-		b := make([]rune, 8)
-		for i := range b {
-			b[i] = letters[rand.Intn(len(letters))]
-		}
-		return string(b)
-	}
-
 	stats := &Stats{Start: Now().Round(time.Second), Interval: 3 * time.Hour}
 	for _, f := range stats.frames() {
 		f.Grow(30)
 		for i := 0; i < rand.Intn(4); i++ {
-			row := f.Row(uid())
+			row := f.Row(randomString(8))
 			for i := range row.Values {
 				row.Values[i] = rand.Intn(100)
 			}

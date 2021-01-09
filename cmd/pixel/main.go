@@ -60,7 +60,7 @@ func main() {
 			w.Header().Set("Pragma", "no-cache")
 			_, _ = w.Write(gif)
 
-			_ = c.Add(nullitics.API(r))
+			_ = c.Add(nullitics.API(r, nullitics.DefaultSalt))
 		}
 	})
 
