@@ -9,7 +9,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v1
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: 'v1.16.0-beta1'
       - name: Run tests
         run: go test -v -race ./...
       - name: Run lint
