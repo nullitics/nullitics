@@ -1,3 +1,3 @@
-module github.com/zserge/nullitics
+module github.com/nullitics/nullitics
 
-go 1.15
+go 1.16

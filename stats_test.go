@@ -9,7 +9,7 @@ import (
 
 // Ensure that search within a sorted frame works as expected
 func TestFrameFind(t *testing.T) {
-	f := Frame{rows: []Row{{Name: "a1"}, {Name: "a4"}, {Name: "a7"}}}
+	f := Frame{Rows: []Row{{Name: "a1"}, {Name: "a4"}, {Name: "a7"}}}
 	for _, test := range []struct {
 		name  string
 		index int
@@ -37,7 +37,7 @@ func TestFrameInsertDelete(t *testing.T) {
 	f.Row("foo")
 	f.Row("bar")
 	f.Row("baz")
-	rows := f.Rows()
+	rows := f.Rows
 	if len(rows) != 3 || rows[0].Name != "bar" || rows[1].Name != "baz" || rows[2].Name != "foo" {
 		t.Error(rows)
 	}
@@ -48,7 +48,7 @@ func TestFrameInsertDelete(t *testing.T) {
 	if ok := f.Delete("invalid_row"); ok {
 		t.Error()
 	}
-	rows = f.Rows()
+	rows = f.Rows
 	if len(rows) != 3 || rows[0].Name != "bar" || rows[1].Name != "foo" || rows[2].Name != "qux" {
 		t.Error(rows)
 	}
@@ -90,15 +90,17 @@ func TestStats(t *testing.T) {
 	stats := &Stats{Start: Now().Round(time.Second), Interval: 3 * time.Hour}
 	for _, f := range stats.frames() {
 		f.Grow(30)
-		for i := 0; i < rand.Intn(4); i++ {
-			row := f.Row(randomString(8))
+		// Ensure that at least one row would be present in each frame, otherwise
+		// frame length after read might be unspecified
+		for i := 0; i < rand.Intn(4)+1; i++ {
+			row := f.Row(RandomString(8))
 			for i := range row.Values {
 				row.Values[i] = rand.Intn(100)
 			}
 		}
 	}
-	s := stats.String()
-	parsed, err := ParseStats(s)
+	s := stats.CSV()
+	parsed, err := ParseStatsCSV(s)
 	if err != nil {
 		t.Error(err)
 	}

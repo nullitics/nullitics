@@ -100,7 +100,7 @@ func TestLogStats(t *testing.T) {
 		{ts("2021-01-04 09:45"), "/g", "", "", "", ""},
 		{ts("2021-01-05 07:30"), "/h", "", "", "", ""},
 	} {
-		if err := c.Add(hit); err != nil {
+		if err := c.Hit(hit); err != nil {
 			t.Error(err)
 		}
 	}
@@ -108,10 +108,10 @@ func TestLogStats(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if err := c.Add(&Hit{ts("2021-01-05 00:01"), "/g", "", "", "", ""}); err != nil {
+	if err := c.Hit(&Hit{ts("2021-01-05 00:01"), "/g", "", "", "", ""}); err != nil {
 		t.Error(err)
 	}
-	if err := c.Add(&Hit{ts("2021-01-05 23:59"), "/h", "", "", "", ""}); err != nil {
+	if err := c.Hit(&Hit{ts("2021-01-05 23:59"), "/h", "", "", "", ""}); err != nil {
 		t.Error(err)
 	}
 	d2, h2, err := c.Stats()

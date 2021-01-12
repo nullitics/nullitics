@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/zserge/nullitics"
+	"github.com/nullitics/nullitics"
 )
 
 func main() {
@@ -20,6 +20,8 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
+	c := nullitics.New()
 
 	head := `<head><meta name="viewport" content="width=device-width, initial-scale=1">
 	<style>body{margin:auto;max-width:40rem;line-height:1.6;padding:1.6rem;}</style></head>`
@@ -41,8 +43,8 @@ func main() {
 		<a href="/">← Back</a>`)
 	})
 
-	mux.Handle("/_/stats/", nullitics.Report())
+	mux.Handle("/_/stats/", c.Report())
 
 	log.Println("Started on port", port)
-	log.Fatal(http.ListenAndServe(":"+port, nullitics.Collect(mux)))
+	log.Fatal(http.ListenAndServe(":"+port, c.Collect(mux)))
 }

@@ -14,13 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zserge/nullitics"
+	"github.com/nullitics/nullitics"
 )
-
-var gif = []byte{
-	0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x21, 0xF9, 0x04,
-	0x01, 0x00, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02,
-}
 
 func main() {
 	defaultPort := os.Getenv("PORT")
@@ -31,6 +26,7 @@ func main() {
 	addr := flag.String("addr", "http://127.0.0.1:"+defaultPort, "External address of this service")
 	dir := flag.String("dir", "", "Directory to store stats")
 	loc := flag.String("loc", "Local", "Time zone")
+	salt := flag.String("salt", nullitics.RandomString(32), "Salt for hashes")
 	flag.Parse()
 
 	location, err := time.LoadLocation(*loc)
@@ -38,7 +34,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	c := nullitics.New(nullitics.Dir(*dir), nullitics.Location(location))
+	c := nullitics.New(nullitics.Dir(*dir),
+		nullitics.Location(location),
+		nullitics.Salt(*salt))
 	report := c.Report()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -53,14 +51,15 @@ func main() {
 			fmt.Fprintf(w, `new Image().src='`+*addr+`/null.gif?r='+encodeURI(document.referrer)+'&d='+screen.width`)
 		case strings.HasSuffix(r.URL.Path, ".gif"):
 			// Serve a tracking pixel and record a hit
-			w.Header().Add("Content-Type", "image/gif")
-			w.Header().Set("Tk", "N")
-			w.Header().Set("Expires", "Mon, 01 Jan 1990 00:00:00 GMT")
-			w.Header().Set("Cache-Control", "no-store")
-			w.Header().Set("Pragma", "no-cache")
-			_, _ = w.Write(gif)
+			c.ServeHTTP(w, r)
+			//w.Header().Add("Content-Type", "image/gif")
+			//w.Header().Set("Tk", "N")
+			//w.Header().Set("Expires", "Mon, 01 Jan 1990 00:00:00 GMT")
+			//w.Header().Set("Cache-Control", "no-store")
+			//w.Header().Set("Pragma", "no-cache")
+			//_, _ = w.Write(gif)
 
-			_ = c.Add(nullitics.API(r, nullitics.DefaultSalt))
+			//_ = c.Add(nullitics.API(r, nullitics.DefaultSalt))
 		}
 	})
 

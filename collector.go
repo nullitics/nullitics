@@ -1,6 +1,10 @@
 package nullitics
 
 import (
+	"bytes"
+	_ "embed"
+	"html/template"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -8,17 +12,25 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"text/template"
 	"time"
 )
 
+var Now = time.Now
+
 var dailyLog = "log.csv"
 var historyLog = "stats.csv"
+
+var (
+	MaxPathLength    = 200
+	MaxRefLength     = 64
+	MaxCountryLength = 2
+)
 
 type Collector struct {
 	sync.Mutex
 	dir      string
 	location *time.Location
+	salt     string
 	appender *Appender
 	history  *Stats
 }
@@ -27,9 +39,10 @@ type Option func(c *Collector)
 
 func Dir(dir string) Option              { return func(c *Collector) { c.dir = dir } }
 func Location(loc *time.Location) Option { return func(c *Collector) { c.location = loc } }
+func Salt(salt string) Option            { return func(c *Collector) { c.salt = salt } }
 
 func New(options ...Option) *Collector {
-	c := &Collector{}
+	c := &Collector{salt: RandomString(32), location: time.Local}
 	for _, opt := range options {
 		opt(c)
 	}
@@ -41,7 +54,8 @@ func date(t time.Time) time.Time {
 	return time.Date(yyyy, mm, dd, 0, 0, 0, 0, t.Location())
 }
 
-func (c *Collector) Add(hit *Hit) error {
+func (c *Collector) Hit(hit *Hit) error {
+	// TODO: add blacklisting logic
 	if filepath.Ext(hit.URI) != "" || strings.Contains(hit.URI, "/_") {
 		return nil
 	}
@@ -77,7 +91,7 @@ func (c *Collector) checkHistoricalStats() error {
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	stats, err := ParseStats(string(b))
+	stats, err := ParseStatsCSV(string(b))
 	if err != nil {
 		return err
 	}
@@ -86,7 +100,7 @@ func (c *Collector) checkHistoricalStats() error {
 }
 
 func (c *Collector) saveHistoricalStats() error {
-	return ioutil.WriteFile(filepath.Join(c.dir, historyLog), []byte(c.history.String()), 0666)
+	return ioutil.WriteFile(filepath.Join(c.dir, historyLog), []byte(c.history.CSV()), 0666)
 }
 
 func (c *Collector) mergeAppender(daily *Stats) {
@@ -96,7 +110,7 @@ func (c *Collector) mergeAppender(daily *Stats) {
 	n := int(date(daily.Start).Sub(c.history.Start)/(time.Hour*24)) + 1
 	for i, frame := range c.history.frames() {
 		frame.Grow(n)
-		for _, row := range daily.frames()[i].Rows() {
+		for _, row := range daily.frames()[i].Rows {
 			total := 0
 			for _, v := range row.Values {
 				total = total + v
@@ -131,6 +145,7 @@ func (c *Collector) Stats() (*Stats, *Stats, error) {
 		return nil, nil, err
 	} else {
 		c.mergeAppender(daily)
+		// TODO: "Daily"  may actually be old, return empty stats if os
 		return daily, c.history, nil
 	}
 }
@@ -151,21 +166,71 @@ func (c *Collector) Close() error {
 	return c.closeAppender()
 }
 
-func (c *Collector) Report() http.Handler {
-	tmpl := template.Must(template.New("").Parse(html))
+var gif = []byte{
+	0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x21, 0xF9, 0x04,
+	0x01, 0x00, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02,
+}
+
+// ServeHTTP makes Collector implement a http.Handler interface. This handler
+// acts as an API and allows to collect stats via a tracking pixel or POST API.
+func (c *Collector) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		w.Header().Add("Content-Type", "image/gif")
+		w.Header().Set("Tk", "N")
+		w.Header().Set("Expires", "Mon, 01 Jan 1990 00:00:00 GMT")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Pragma", "no-cache")
+		_, _ = w.Write(gif)
+	} else if r.Method == "POST" || r.Method == "PUT" {
+		if r.Header.Get("Content-Type") == "application/json" {
+			// TODO: parse JSON and put values into query
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+	_ = c.Hit(hit(r, c.salt, true))
+}
+
+// Add allows to collect a hit caused by the given request.
+func (c *Collector) Add(r *http.Request) error {
+	return c.Hit(hit(r, c.salt, false))
+}
+
+// Collect is a middleware that wraps an existing handler and collects every hit/request.
+func (c *Collector) Collect(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		daily, history, err := c.Stats()
+		_ = c.Add(r)
+		h.ServeHTTP(w, r)
+	})
+}
+
+// Report returns a handler that renders the dashboard report for the collected stats
+func (c *Collector) Report() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "text/html")
+		html, err := c.ReportHTML()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
-		if err := tmpl.Execute(w, struct{ Daily, History *Stats }{daily, history}); err != nil {
+		if _, err := io.WriteString(w, html); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
 }
 
-func randomString(n int) string {
+func (c *Collector) ReportHTML() (string, error) {
+	b := &bytes.Buffer{}
+	daily, history, err := c.Stats()
+	if err == nil {
+		err = ReportTemplate.Execute(b, struct {
+			Daily   *Stats
+			History *Stats
+			Map     string
+		}{daily, history, mapSVG})
+	}
+	return b.String(), nil
+}
+
+func RandomString(n int) string {
 	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	b := make([]rune, n)
 	for i := range b {
@@ -174,31 +239,10 @@ func randomString(n int) string {
 	return string(b)
 }
 
-var DefaultCollector = New(Dir("nullitics"), Location(time.Local))
-var DefaultSalt = randomString(32)
+var ReportTemplate = template.Must(template.New("").Parse(reportHTML))
 
-var Now = time.Now
+//go:embed "report.html"
+var reportHTML string
 
-func Collect(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = DefaultCollector.Add(Page(r, DefaultSalt))
-		h.ServeHTTP(w, r)
-	})
-}
-
-func Report() http.Handler { return DefaultCollector.Report() }
-
-var html = `<!doctype html><html>
-<head>
-</head>
-<body>
-<h1>Today {{ .Daily.Start.Format "2006-01-02"}}</h1>
-<pre>
-{{ .Daily }} 
-</pre>
-<h1>Since {{ .History.Start.Format "2006-01-02"}}</h1>
-<pre>
-{{ .History }} 
-</pre>
-</body>
-</html>`
+//go:embed "worldmap.svg"
+var mapSVG string

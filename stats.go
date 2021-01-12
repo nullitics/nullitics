@@ -23,8 +23,8 @@ func (stats *Stats) frames() []*Frame {
 	return []*Frame{&stats.URIs, &stats.Sessions, &stats.Refs, &stats.Countries, &stats.Devices}
 }
 
-// String returns a CSV-formatted stats representation.
-func (stats *Stats) String() string {
+// CSV returns a CSV-formatted text stats representation.
+func (stats *Stats) CSV() string {
 	b := &strings.Builder{}
 	// Header: timestamp and interval as a comment
 	b.WriteByte('#')
@@ -34,7 +34,7 @@ func (stats *Stats) String() string {
 	b.WriteByte('\n')
 	// Frames
 	for _, frame := range stats.frames() {
-		for _, row := range frame.rows {
+		for _, row := range frame.Rows {
 			b.WriteString(row.Name)
 			for _, v := range row.Values {
 				b.WriteByte(',')
@@ -47,8 +47,8 @@ func (stats *Stats) String() string {
 	return b.String()
 }
 
-// ParseStats returns a Stats instance from the given CSV text string.
-func ParseStats(s string) (*Stats, error) {
+// ParseStatsCSV returns a Stats instance from the given CSV text string.
+func ParseStatsCSV(s string) (*Stats, error) {
 	lines := strings.Split(s, "\n")
 	if lines[0] == "" {
 		return &Stats{Interval: time.Hour * 24}, nil
@@ -102,14 +102,14 @@ func ParseStats(s string) (*Stats, error) {
 // integer values.
 type Frame struct {
 	len  int
-	rows []Row
+	Rows []Row
 }
 
 // Len returns the current length of the row time series (i.e. row width)
 // within the frame.
 func (f *Frame) Len() int {
-	if f.len == 0 && len(f.rows) > 0 {
-		f.len = len(f.rows[0].Values)
+	if f.len == 0 && len(f.Rows) > 0 {
+		f.len = len(f.Rows[0].Values)
 	}
 	return f.len
 }
@@ -121,8 +121,8 @@ func (f *Frame) Grow(size int) {
 		return
 	}
 	f.len = size
-	for i := range f.rows {
-		row := &f.rows[i]
+	for i := range f.Rows {
+		row := &f.Rows[i]
 		if m := size - len(row.Values); m > 0 {
 			row.Values = append(row.Values, make([]int, m)...)
 		} else {
@@ -131,29 +131,25 @@ func (f *Frame) Grow(size int) {
 	}
 }
 
-// Rows returns a list of all rows within a frame. The resulting slice should
-// be treated as read-only and should never be mutated.
-func (f *Frame) Rows() []Row { return f.rows }
-
 // Row returns an existing row by its name or inserts one. It ensures that rows
 // are sorted alphabetically withing the data frame.
 func (f *Frame) Row(name string) *Row {
 	i, found := f.find(name)
 	if !found {
-		f.rows = append(f.rows, Row{})
-		copy(f.rows[i+1:], f.rows[i:])
-		f.rows[i].Name = name
-		f.rows[i].Values = make([]int, f.Len())
+		f.Rows = append(f.Rows, Row{})
+		copy(f.Rows[i+1:], f.Rows[i:])
+		f.Rows[i].Name = name
+		f.Rows[i].Values = make([]int, f.Len())
 	}
-	return &f.rows[i]
+	return &f.Rows[i]
 }
 
 // Delete removes a row from the frame
 func (f *Frame) Delete(name string) bool {
 	i, found := f.find(name)
 	if found {
-		copy(f.rows[i:], f.rows[i+1:])
-		f.rows = f.rows[:len(f.rows)-1]
+		copy(f.Rows[i:], f.Rows[i+1:])
+		f.Rows = f.Rows[:len(f.Rows)-1]
 	}
 	return found
 }
@@ -162,16 +158,16 @@ func (f *Frame) Delete(name string) bool {
 // flag if such row exists. If the flag is false - the row should be inserted
 // at the provided index.
 func (f *Frame) find(name string) (int, bool) {
-	i, j := 0, len(f.rows)
+	i, j := 0, len(f.Rows)
 	for i < j {
 		h := int(uint(i+j) >> 1)
-		if f.rows[h].Name < name {
+		if f.Rows[h].Name < name {
 			i = h + 1
 		} else {
 			j = h
 		}
 	}
-	found := i < len(f.rows) && f.rows[i].Name == name
+	found := i < len(f.Rows) && f.Rows[i].Name == name
 	return i, found
 }
 
@@ -181,4 +177,19 @@ func (f *Frame) find(name string) (int, bool) {
 type Row struct {
 	Name   string
 	Values []int
+}
+
+// Get is a helper method to safely read Row values without taking care about row bounds.
+func (r *Row) Get(i int) int {
+	if i < 0 || i >= len(r.Values) {
+		return 0
+	}
+	return r.Values[i]
+}
+
+func (r *Row) Last(n int) (sum int) {
+	for i := 0; i < n; i++ {
+		sum = sum + r.Get(len(r.Values)-1-i)
+	}
+	return sum
 }
