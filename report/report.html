@@ -1,0 +1,41 @@
+{{define "head"}}{{end}}
+
+{{define "header"}}
+<nav><h1>Nullitics</h1></nav>
+{{end}}
+{{define "footer"}}
+<footer style="margin-top:3rem;text-align:right;"><small>&copy; 2021 - nullitics.com</small></footer>
+{{end}}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nullitics - zero-effort minimal analytics</title>
+    <style>
+    </style>
+    {{ template "head" }}
+  </head>
+  <body>
+    {{ template "header" }}
+    <section id="nullitics" style="max-width:48rem;margin:auto;"></section>
+    {{ template "script" . }} {{ template "footer" }}
+    <noscript>
+      <pre>
+#
+# Please, enable JavaScript for better viewing experience.
+#
+
+# Daily log data
+{{ .Daily.CSV }}
+# Historical data
+{{ .History.CSV }}
+#   --
+#   Sincerely,
+#     nullitics.com
+  </pre
+      >
+    </noscript>
+  </body>
+</html>

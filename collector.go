@@ -3,6 +3,7 @@ package nullitics
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -224,10 +225,9 @@ func (c *Collector) ReportHTML() (string, error) {
 		err = ReportTemplate.Execute(b, struct {
 			Daily   *Stats
 			History *Stats
-			Map     string
-		}{daily, history, mapSVG})
+		}{daily, history})
 	}
-	return b.String(), nil
+	return b.String(), err
 }
 
 func RandomString(n int) string {
@@ -239,10 +239,23 @@ func RandomString(n int) string {
 	return string(b)
 }
 
-var ReportTemplate = template.Must(template.New("").Parse(reportHTML))
+var (
+	//go:embed report/report.html
+	reportHTML string
+	//go:embed report/report.js
+	reportJS string
+	//go:embed report/worldmap.svg
+	worldMapSVG string
 
-//go:embed "report.html"
-var reportHTML string
+	fullTemplate = fmt.Sprintf(`
+		{{define "script"}}
+		<script type="text/javascript">
+		const worldMapSVG = %q;
+		const fullData = {{ .History }};
+		const dailyData = {{ .Daily }};
+		%s
+		</script>
+		{{end}}`, worldMapSVG, reportJS) + reportHTML
 
-//go:embed "worldmap.svg"
-var mapSVG string
+	ReportTemplate = template.Must(template.New("").Parse(fullTemplate))
+)
