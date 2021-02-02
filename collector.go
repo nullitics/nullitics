@@ -1,7 +1,6 @@
 package nullitics
 
 import (
-	"bytes"
 	_ "embed"
 	"fmt"
 	"html/template"
@@ -205,29 +204,25 @@ func (c *Collector) Collect(h http.Handler) http.Handler {
 }
 
 // Report returns a handler that renders the dashboard report for the collected stats
-func (c *Collector) Report() http.Handler {
+func (c *Collector) Report(extra interface{}) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "text/html")
-		html, err := c.ReportHTML()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		if _, err := io.WriteString(w, html); err != nil {
+		if err := c.report(w, extra); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
 }
 
-func (c *Collector) ReportHTML() (string, error) {
-	b := &bytes.Buffer{}
+func (c *Collector) report(w io.Writer, extra interface{}) error {
 	daily, history, err := c.Stats()
-	if err == nil {
-		err = ReportTemplate.Execute(b, struct {
-			Daily   *Stats
-			History *Stats
-		}{daily, history})
+	if err != nil {
+		return err
 	}
-	return b.String(), err
+	return ReportTemplate.Execute(w, struct {
+		Daily   *Stats
+		History *Stats
+		Extra   interface{}
+	}{daily, history, extra})
 }
 
 func RandomString(n int) string {
