@@ -52,14 +52,6 @@ func main() {
 		case strings.HasSuffix(r.URL.Path, ".gif"):
 			// Serve a tracking pixel and record a hit
 			c.ServeHTTP(w, r)
-			//w.Header().Add("Content-Type", "image/gif")
-			//w.Header().Set("Tk", "N")
-			//w.Header().Set("Expires", "Mon, 01 Jan 1990 00:00:00 GMT")
-			//w.Header().Set("Cache-Control", "no-store")
-			//w.Header().Set("Pragma", "no-cache")
-			//_, _ = w.Write(gif)
-
-			//_ = c.Add(nullitics.API(r, nullitics.DefaultSalt))
 		}
 	})
 
