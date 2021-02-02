@@ -76,13 +76,6 @@ func (ap *Appender) Append(hit *Hit) error {
 }
 
 func ParseAppendLog(filename string, location *time.Location) (*Stats, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	r := bufio.NewReader(f)
-	sessions := map[string]bool{}
 	stats := &Stats{
 		Interval:  time.Hour,
 		URIs:      Frame{len: 24},
@@ -91,6 +84,16 @@ func ParseAppendLog(filename string, location *time.Location) (*Stats, error) {
 		Countries: Frame{len: 24},
 		Devices:   Frame{len: 24},
 	}
+	f, err := os.Open(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return stats, nil
+		}
+		return nil, err
+	}
+	defer f.Close()
+	r := bufio.NewReader(f)
+	sessions := map[string]bool{}
 	for {
 		line, err := r.ReadString('\n')
 		if err != nil {
