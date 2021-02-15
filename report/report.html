@@ -1,26 +1,288 @@
-{{define "head"}}{{end}}
+{{define "extra_head"}}{{end}}
+{{define "head"}}
+<style>
+  /* Variables */
+  :root {
+    --color-text: #222222;
+    --color-text-light: #929eb0;
+    --color-background-grey: #e9ecf1;
+    --color-background-light: #f6f7f9;
+    --color-background-map: #e9ecf1;
+    --color-map: #333333;
+    --color-background: #ffffff;
+    --color-accent: #fddd34;
+    --color-background-footer: #222222;
+    --color-footer: #f6f7f9;
+  }
+  /*
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-text: #ffffff;
+      --color-text-light: #cccccc;
+      --color-background-grey: #888888;
+      --color-background-light: #333333;
+      --color-background: #222222;
+      --color-map: #fddd34;
+      --color-background-map: #888888;
+      --color-accent: #fddd34;
+      --color-background-footer: #333333;
+      --color-footer: #ffffff;
+    }
+  }
+  */
 
-{{define "header"}}
-<nav><h1>Nullitics</h1></nav>
-{{end}}
-{{define "footer"}}
-<footer style="margin-top:3rem;text-align:right;"><small>&copy; 2021 - nullitics.com</small></footer>
+  /* Reset */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: Roboto, system-ui, -apple-system, BlinkMacSystemFont,
+      'Segoe UI', Oxygen, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',
+      sans-serif;
+    font-size: 10px;
+    background-color: var(--color-background);
+    color: var(--color-text);
+  }
+  input,
+  button,
+  select {
+    font: inherit;
+  }
+
+  /* Container */
+  main {
+    max-width: 1148px;
+    margin: 0 auto;
+    padding: 0 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    grid-template-areas: 'nav nav' 'sessions sessions' 'paths refs' 'countries countries' 'devices .';
+    gap: 60px 160px;
+  }
+  @media screen and (max-width: 1200px) {
+    main {
+      grid-template-columns: 1fr;
+      grid-template-areas: 'nav' 'sessions' 'paths' 'refs' 'countries' 'devices';
+    }
+  }
+  nav {
+    grid-area: nav;
+  }
+  .sessions {
+    grid-area: sessions;
+  }
+  .paths {
+    grid-area: paths;
+  }
+  .refs {
+    grid-area: refs;
+  }
+  .countries {
+    grid-area: countries;
+  }
+  .devices {
+    grid-area: devices;
+  }
+
+  /* Navigation buttons */
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+  button {
+    color: var(--color-text);
+    font-size: 18px;
+    background: none;
+    border: 1px solid var(--color-text-light);
+    height: 50px;
+    margin: -1px 0 0 -1px;
+    flex: 0 1 160px;
+    outline: none;
+  }
+  button:focus {
+    z-index: 1;
+    border: 2px solid var(--color-text);
+  }
+
+  /* Panels */
+  section h2 {
+    display: flex;
+    align-items: baseline;
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 50px;
+    margin: 10px 0;
+  }
+  section {
+    font-size: 20px;
+  }
+  section .icon-expand {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18.5714 18.5714H1.42859V1.42859H10V0H0.714293C0.319468 0 0 0.319468 0 0.714293V19.2857C0 19.6805 0.319468 20 0.714293 20H19.2857C19.6805 20 20 19.6805 20 19.2857V10H18.5714V18.5714Z' fill='currentColor'/%3E%3Cpath d='M12.8573 0V1.42859H17.5615L9.49512 9.49497L10.5052 10.505L18.5715 2.43863V7.14285H20.0001V0L12.8573 0Z' fill='currentColor'/%3E%3C/svg%3E%0A");
+  }
+  section.list .data {
+    display: grid;
+    grid-template-columns: auto 40px 40px 70px;
+    grid-template-rows: auto;
+    grid-gap: 5px 20px;
+  }
+  section.list .record {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  section.list .count {
+    font-weight: 600;
+    text-align: right;
+  }
+  section.list .percent {
+    text-align: right;
+    color: var(--color-text-light);
+  }
+  section.list .bar {
+    display: flex;
+    background-color: var(--color-background-grey);
+    margin: 5px 30px 5px 0;
+  }
+  section.list .bar span {
+    display: inline-block;
+    background-color: var(--color-text);
+  }
+
+  section.countries .data,
+  section.sessions .data {
+    background-color: var(--color-background-light);
+  }
+
+  section.sessions .data {
+    padding: 60px;
+  }
+  section.sessions aside {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  section.sessions h2 {
+    flex: 1;
+  }
+  section.sessions section {
+    display: flex;
+    flex-direction: column;
+    padding-left: 10px;
+  }
+  section.sessions section h3 {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--color-text-light);
+  }
+  section.sessions section span {
+    font-size: 42px;
+    font-weight: 500;
+  }
+  section.sessions .visitors {
+    border-left: 4px solid var(--color-text);
+  }
+  section.sessions .views {
+    margin-left: 50px;
+    border-left: 4px solid var(--color-accent);
+  }
+  section.sessions .bounce-rate {
+    margin-left: 30px;
+  }
+  section.sessions .bounce-rate span::after {
+    content: '%';
+    color: var(--color-text-light);
+  }
+</style>
+{{end}} {{define "header"}}
+<header>
+  <h1
+    style="color:var(--color-text);font-size:32px;margin:60px 0 60px 80px;line-height:40px;"
+  >
+    NULLITICS
+  </h1>
+</header>
+{{end}} {{define "footer"}}
+<footer style="margin-top:3rem;text-align:right;">
+  <small>&copy; 2021 - nullitics.com</small>
+</footer>
 {{end}}
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nullitics - zero-effort minimal analytics</title>
-    <style>
-    </style>
-    {{ template "head" }}
+    <style></style>
+    {{ template "head" . }}
+    {{ template "extra_head" . }}
   </head>
   <body>
-    {{ template "header" }}
-    <section id="nullitics" style="max-width:48rem;margin:auto;"></section>
-    {{ template "script" . }} {{ template "footer" }}
+    {{ template "header" . }}
+    <section id="cloak" style="display:none;">
+      <main>
+        <!-- Navigation -->
+        <nav>
+          <button onclick="last(1)">Today</button>
+          <button class="active" onclick="last(7)">Last 7 days</button>
+          <button onclick="last(30)">Last 30 days</button>
+        </nav>
+
+        <!-- Sessions/Visitors graph -->
+        <section class="sessions">
+          <aside>
+            <h2>Sessions</h2>
+            <section class="visitors">
+              <h3>visitors</h3>
+              <span>153</span>
+            </section>
+            <section class="views">
+              <h3>views</h3>
+              <span>196</span>
+            </section>
+            <section class="bounce-rate">
+              <h3>bounce rate</h3>
+              <span>78%</span>
+            </section>
+          </aside>
+          <div class="data"></div>
+        </section>
+
+        <!-- Paths -->
+        <section class="paths list">
+          <h2>Paths<a class="icon-expand" href="#"></a></h2>
+          <div class="data"></div>
+        </section>
+
+        <!-- Referrers -->
+        <section class="refs list">
+          <h2>Referrers<a class="icon-expand" href="#"></a></h2>
+          <div class="data"></div>
+        </section>
+
+        <!-- Countries -->
+        <section class="countries">
+          <h2>Countries<a class="icon-expand" href="#"></a></h2>
+          <div class="data"></div>
+        </section>
+
+        <!-- Devices -->
+        <section class="devices list">
+          <h2>Devices</h2>
+          <div class="data"></div>
+        </section>
+      </main>
+    </section>
+    {{ template "script" . }} {{ template "footer" . }}
     <noscript>
       <pre>
 #
