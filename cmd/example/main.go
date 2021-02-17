@@ -43,7 +43,7 @@ func main() {
 		<a href="/">← Back</a>`)
 	})
 
-	mux.Handle("/_/stats/", c.Report())
+	mux.Handle("/_/stats/", c.Report(nil))
 
 	log.Println("Started on port", port)
 	log.Fatal(http.ListenAndServe(":"+port, c.Collect(mux)))

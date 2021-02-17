@@ -37,7 +37,7 @@ func main() {
 	c := nullitics.New(nullitics.Dir(*dir),
 		nullitics.Location(location),
 		nullitics.Salt(*salt))
-	report := c.Report()
+	report := c.Report(nil)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.Method, r.URL.Path, r.UserAgent(), r.Referer())
