@@ -22,7 +22,7 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          go1.16beta1 build -o example ./cmd/example
-          go1.16beta1 build -o pixel ./cmd/pixel
+          go1.16rc1 build -o example ./cmd/example
+          go1.16rc1 build -o pixel ./cmd/pixel
       - name: Build docker image
         run: docker build -t nullitics .
