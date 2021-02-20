@@ -11,13 +11,13 @@ jobs:
         with:
           go-version: '1.15.0'
       - name: Install Go1.16 Beta 1
-        run: go get golang.org/dl/go1.16beta1 && go1.16beta1 download
+        run: go get golang.org/dl/go1.16rc1 && go1.16rc1 download
       - name: Run tests
-        run: go1.16beta1 test -v -race ./...
-      - name: Run lint
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.29
+        run: go1.16rc1 test -v -race ./...
+      #- name: Run lint
+      #  uses: golangci/golangci-lint-action@v2
+      #  with:
+      #    version: v2.4.0
       - name: Build examples
         env:
           CGO_ENABLED: 0
