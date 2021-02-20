@@ -14,13 +14,15 @@ jobs:
         run: go get golang.org/dl/go1.16beta1 && go1.16beta1 download
       - name: Run tests
         run: go1.16beta1 test -v -race ./...
-      #- name: Run lint
-        #uses: golangci/golangci-lint-action@v2
-        #with:
-          #version: v1.29
+      - name: Run lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.29
       - name: Build examples
         env:
           CGO_ENABLED: 0
         run: |
           go1.16beta1 build -o example ./cmd/example
           go1.16beta1 build -o pixel ./cmd/pixel
+      - name: Build docker image
+        run: docker build -t nullitics .
