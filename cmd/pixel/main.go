@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -18,12 +16,8 @@ import (
 )
 
 func main() {
-	defaultPort := os.Getenv("PORT")
-	if defaultPort == "" {
-		defaultPort = "8080"
-	}
-	port := flag.String("port", defaultPort, "Port number")
-	addr := flag.String("addr", "http://127.0.0.1:"+defaultPort, "External address of this service")
+	port := flag.String("port", "8080", "Port number")
+	url := flag.String("url", "http://localhost:8080", "External address of this service")
 	dir := flag.String("dir", "", "Directory to store stats")
 	loc := flag.String("loc", "Local", "Time zone")
 	salt := flag.String("salt", nullitics.RandomString(32), "Salt for hashes")
@@ -48,13 +42,13 @@ func main() {
 		case strings.HasSuffix(r.URL.Path, ".js"):
 			// Return a JS snippet
 			w.Header().Add("Content-Type", "application/javascript")
-			fmt.Fprintf(w, `new Image().src='`+*addr+`/null.gif?r='+encodeURI(document.referrer)+'&d='+screen.width`)
+			fmt.Fprintf(w, `new Image().src='`+*url+`/null.gif?r='+encodeURI(document.referrer)+'&d='+screen.width`)
 		case strings.HasSuffix(r.URL.Path, ".gif"):
 			// Serve a tracking pixel and record a hit
 			c.ServeHTTP(w, r)
 		}
 	})
 
-	log.Println("Started on port " + *port + ", check " + path.Join(*addr+"/stats/"))
+	log.Println("Started on port " + *port + ", check " + *url + "/stats/")
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
