@@ -5,7 +5,7 @@
 [![GoReportCard example](https://goreportcard.com/badge/github.com/nullitics/nullitics)](https://goreportcard.com/report/github.com/nullitics/nullitics)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zserge/nullitics)](https://hub.docker.com/repository/docker/zserge/nullitics/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Buy me a coffee](https://img.shields.io/badge/buymeacoffee-donate-yellow.svg)](https://buymeacoffee/zserge)
+[![Buy me a coffee](https://img.shields.io/badge/buymeacoffee-donate-yellow.svg)](https://buymeacoffee.com/zserge)
 
 Zero-effort web analytics. This is a self-hosted open-source version of Nullitics. Check out https://nullitics.com for the world cheapest web analytics in the cloud.
 
