@@ -132,7 +132,7 @@ func (f *Frame) Grow(size int) {
 }
 
 // Row returns an existing row by its name or inserts one. It ensures that rows
-// are sorted alphabetically withing the data frame.
+// are sorted alphabetically within the data frame.
 func (f *Frame) Row(name string) *Row {
 	i, found := f.find(name)
 	if !found {
