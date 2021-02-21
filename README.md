@@ -22,6 +22,48 @@ Zero-effort web analytics. This is a self-hosted open-source version of Nullitic
 * Can be used as a standalone service or as a Go library.
 * You own your data.
 
+## How to use it?
+
+Nullitics comes in several flavours:
+
+* Embedded (a Go library to use in your Go projects).
+* Self-hosted (a static binary or a Docker container to run on your server).
+* Cloud (the world cheapest web analytics, that also respect your users' privacy).
+
+### Library API
+
+The package API is designed to be as simple as possible:
+
+```go
+mux := http.NewServeMux()
+...
+// Create a new Nullitics collector to collect analytics
+c := nullitics.New()
+// Register a report endpoint to see the dashboard
+mux.Handle("/_/stats/", c.Report(nil))
+// Wrap mux so that every request would be recorded
+http.ListenAndServe(":"+port, c.Collect(mux))
+```
+
+Of course, there's plenty of room for customization, see [GoDoc](https://godoc.org/github.com/nullitics/nullitics) for further details.
+
+Also you may try out the `./cmd/example` to see how Nullitics work as library.
+
+### Self-hosted container
+
+Running container on a personal server is even simpler:
+
+```
+docker run -p 8080:8080 zserge/nullitics \
+	-url mydomain.com \
+	-dir nullitics-data \
+	-loc Europe/Berlin \
+```
+
+You may check `./cmd/pixel` to see how the standalone version works.
+
+Of course, you can still build it yourself and run as a Linux service instead of a Docker container, if you like.
+
 ## License
 
 Code is distributed under MIT license, feel free to use it in your proprietary projects as well.
