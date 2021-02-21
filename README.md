@@ -13,7 +13,7 @@ Zero-effort web analytics. This is a self-hosted open-source version of Nullitic
 
 * Privacy-focused (no cookies, fully anonymized).
 * Easy to set up (no databases, no external dependencies).
-* Meaningful, stylish dashboard.
+* Meaningful, stylish [dashboard](https://nullitics.com/dashboard/zserge.com).
 * Easy to understand metrics (unique visitors, page views, referrers, countries, device types).
 * Very lightweight (Docker image is under 10MB, same is the size of the executable).
 * Compliant with GDPR, ePrivacy, PECR, CCPA, and COPPA.
