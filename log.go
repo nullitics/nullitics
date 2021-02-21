@@ -10,12 +10,15 @@ import (
 	"time"
 )
 
+// Appender is an append-only log writer.
 type Appender struct {
 	f     *os.File
 	start time.Time
 	sb    strings.Builder
 }
 
+// NewAppender creates an Appender for the given log filename. It may
+// optionally truncate the log file before using it.
 func NewAppender(filename string, truncate bool) (*Appender, error) {
 	flags := os.O_RDWR | os.O_CREATE
 	if truncate {
@@ -52,8 +55,13 @@ func NewAppender(filename string, truncate bool) (*Appender, error) {
 	return &Appender{f: f, start: time.Unix(unix, 0)}, nil
 }
 
+// StartTime returns the timestamp of the first hit in the log.
 func (ap *Appender) StartTime() time.Time { return ap.start }
-func (ap *Appender) Close() error         { return ap.f.Close() }
+
+// Close shuts down the appender.
+func (ap *Appender) Close() error { return ap.f.Close() }
+
+// Append write hit data to the end of the log file.
 func (ap *Appender) Append(hit *Hit) error {
 	ap.sb.Reset()
 	ap.sb.WriteString(strconv.FormatInt(hit.Timestamp.Unix(), 10))
@@ -75,6 +83,8 @@ func (ap *Appender) Append(hit *Hit) error {
 	return err
 }
 
+// ParseAppendLog read the log file, assuming the timestamps are in the given
+// time zone, and returns a Stats object with hourly precision.
 func ParseAppendLog(filename string, location *time.Location) (*Stats, error) {
 	stats := &Stats{
 		Interval:  time.Hour,

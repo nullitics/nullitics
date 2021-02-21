@@ -187,6 +187,7 @@ func (r *Row) Get(i int) int {
 	return r.Values[i]
 }
 
+// Last returns the sum of the last n elements in the Row
 func (r *Row) Last(n int) (sum int) {
 	for i := 0; i < n; i++ {
 		sum = sum + r.Get(len(r.Values)-1-i)

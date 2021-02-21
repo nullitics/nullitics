@@ -1,7 +1,7 @@
 package nullitics
 
 import (
-	_ "embed"
+	_ "embed" // embed package must be imported for embedded FS to work
 	"fmt"
 	"html/template"
 	"io"
@@ -15,17 +15,25 @@ import (
 	"time"
 )
 
+// Now is a timestamp generator. It is made public so that the caller could
+// mock it or replace with their own implementation.
 var Now = time.Now
 
 var dailyLog = "log.csv"
 var historyLog = "stats.csv"
 
 var (
-	MaxPathLength    = 200
-	MaxRefLength     = 64
+	// MaxPathLength is the longest possible URI or event name length.
+	MaxPathLength = 200
+	// MaxRefLength is the longest possible referrer length. Typically, domain
+	// names are no longer than 63 bytes.
+	MaxRefLength = 64
+	// MaxCountryLength is the longest possible country code. Nullitics uses ISO
+	// codes, so 2 bytes should be enough.
 	MaxCountryLength = 2
 )
 
+// Collector is an abstracton that records Hits and provides collected Stats.
 type Collector struct {
 	sync.Mutex
 	dir      string
@@ -35,12 +43,19 @@ type Collector struct {
 	history  *Stats
 }
 
+// Option is a function option data type for Collector.
 type Option func(c *Collector)
 
-func Dir(dir string) Option              { return func(c *Collector) { c.dir = dir } }
-func Location(loc *time.Location) Option { return func(c *Collector) { c.location = loc } }
-func Salt(salt string) Option            { return func(c *Collector) { c.salt = salt } }
+// Dir sets the collector working directory.
+func Dir(dir string) Option { return func(c *Collector) { c.dir = dir } }
 
+// Location set the collector time zone.
+func Location(loc *time.Location) Option { return func(c *Collector) { c.location = loc } }
+
+// Salt initializes the collector salt for hashes. By default the salt is a random string.
+func Salt(salt string) Option { return func(c *Collector) { c.salt = salt } }
+
+// New creates a collector instance with the given options.
 func New(options ...Option) *Collector {
 	c := &Collector{salt: RandomString(32), location: time.Local}
 	for _, opt := range options {
@@ -54,6 +69,7 @@ func date(t time.Time) time.Time {
 	return time.Date(yyyy, mm, dd, 0, 0, 0, 0, t.Location())
 }
 
+// Hit records a single hit data.
 func (c *Collector) Hit(hit *Hit) error {
 	// TODO: add blacklisting logic
 	if filepath.Ext(hit.URI) != "" || strings.Contains(hit.URI, "/_") {
@@ -136,6 +152,8 @@ func (c *Collector) readDailyStats() (*Stats, error) {
 	return ParseAppendLog(filepath.Join(c.dir, dailyLog), c.location)
 }
 
+// Stats returns the daily and overall statistic for the given collector. Daily
+// stats have hourly precision, total stats have daily precision.
 func (c *Collector) Stats() (*Stats, *Stats, error) {
 	c.Lock()
 	defer c.Unlock()
@@ -160,6 +178,7 @@ func (c *Collector) closeAppender() error {
 	return nil
 }
 
+// Close shuts down the collector.
 func (c *Collector) Close() error {
 	c.Lock()
 	defer c.Unlock()
@@ -225,6 +244,7 @@ func (c *Collector) report(w io.Writer, extra interface{}) error {
 	}{daily, history, extra})
 }
 
+// RandomString is a helper utility to generate random string IDs, salts etc.
 func RandomString(n int) string {
 	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	b := make([]rune, n)
@@ -252,5 +272,8 @@ var (
 		</script>
 		{{end}}`, worldMapSVG, reportJS) + reportHTML
 
+	// ReportTemplate is a http/template.Template for the default dashboard UI.
+	// Feel free to customize it to your own needs by providing the {{head}},
+	// {{extra_head}}, {{header}} or {{footer}} sections.
 	ReportTemplate = template.Must(template.New("").Parse(fullTemplate))
 )

@@ -12,16 +12,25 @@ import (
 	"strings"
 )
 
+// GeoDB is a file location for a GeoLite CSV database. By default the location
+// is set to $GEODB environment variable, but can be changed if needed.
 var GeoDB, _ = NewGeoDB(os.Getenv("GEODB"))
 
 type geodb []ipRange
+
+// GeoFinder is an interface, that can find the country ISO code by the IP
+// address.
+type GeoFinder interface {
+	Find(ip string) string
+}
 
 type ipRange struct {
 	Net     *net.IPNet
 	Country string
 }
 
-func NewGeoDB(zipfile string) (geodb, error) {
+// NewGeoDB reads a GeoLite CSV zip file and returns the geo database, or an error.
+func NewGeoDB(zipfile string) (GeoFinder, error) {
 	f, err := os.Open(zipfile)
 	if err != nil {
 		return nil, err
@@ -119,6 +128,7 @@ func readCSV(file *zip.File, fields []string, f func([]string) error) error {
 	}
 }
 
+// Find returns the country ISO code for the provided ipv4 address
 func (db geodb) Find(ipv4 string) string {
 	ip := net.ParseIP(ipv4).To4()
 	if ip == nil {

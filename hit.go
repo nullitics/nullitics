@@ -12,14 +12,16 @@ import (
 )
 
 const (
-	Mobile  = "mobile"
+	// Mobile device type
+	Mobile = "mobile"
+	// Desktop device type
 	Desktop = "desktop"
 )
 
 var (
-	// Request headers, containing the real user IP address
+	// IPHeaders are request headers, containing the real user IP address
 	IPHeaders = []string{"X-Real-IP", "X-Forwarded-For"}
-	// User-Agent substrings, typical only for mobile devices
+	// MobileUAs are user-agent substrings, typical only for mobile devices
 	MobileUAs = []string{"iPhone", "iPad", "Android"}
 	// MobileBreakpoint is the maximum screen width for mobile devices, 992px is taken from Bootstrap.
 	MobileBreakpoint = 992
@@ -29,6 +31,7 @@ var (
 	BotAgents = []string{"bot", "crawler", "spider", "spyder", "search", "worm", "fetch", "nutch", "http://", "https://"}
 )
 
+// Hit is a basic data type describing a single page visit or event.
 type Hit struct {
 	Timestamp time.Time
 	URI       string
