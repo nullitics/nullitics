@@ -14,7 +14,13 @@ import (
 
 // GeoDB is a file location for a GeoLite CSV database. By default the location
 // is set to $GEODB environment variable, but can be changed if needed.
-var GeoDB, _ = NewGeoDB(os.Getenv("GEODB"))
+var GeoDB GeoFinder
+
+func init() {
+	if GeoDB, _ = NewGeoDB(os.Getenv("GEODB")); GeoDB == nil {
+		GeoDB = &geodb{}
+	}
+}
 
 type geodb []ipRange
 
