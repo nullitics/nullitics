@@ -214,11 +214,27 @@ func (c *Collector) Add(r *http.Request) error {
 	return c.Hit(hit(r, c.salt, false))
 }
 
+type responseWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func (rw *responseWriter) WriteHeader(status int) { rw.status = status }
+func (rw *responseWriter) Write(b []byte) (int, error) {
+	if rw.status == 0 {
+		rw.WriteHeader(http.StatusOK)
+	}
+	return rw.ResponseWriter.Write(b)
+}
+
 // Collect is a middleware that wraps an existing handler and collects every hit/request.
 func (c *Collector) Collect(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = c.Add(r)
-		h.ServeHTTP(w, r)
+		rw := &responseWriter{w, 0}
+		h.ServeHTTP(rw, r)
+		if rw.status >= 200 && rw.status < 300 {
+			_ = c.Add(r)
+		}
 	})
 }
 
