@@ -1,8 +1,8 @@
-{{define "extra_head"}}{{end}}
-{{define "head"}}
+{{define "extra_head"}}{{end}} {{define "head"}}
 <style>
   /* Variables */
   :root {
+    --font-size: 16px;
     --color-text: #222222;
     --color-text-light: #929eb0;
     --color-background-grey: #e9ecf1;
@@ -41,7 +41,6 @@
     font-family: Roboto, system-ui, -apple-system, BlinkMacSystemFont,
       'Segoe UI', Oxygen, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',
       sans-serif;
-    font-size: 10px;
     background-color: var(--color-background);
     color: var(--color-text);
   }
@@ -55,7 +54,7 @@
   main {
     max-width: 1148px;
     margin: 0 auto;
-    padding: 0 30px;
+    padding: 60px 30px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto;
@@ -64,7 +63,7 @@
   }
   @media screen and (max-width: 1200px) {
     main {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       grid-template-areas: 'nav' 'sessions' 'paths' 'refs' 'countries' 'devices';
     }
   }
@@ -96,12 +95,12 @@
   }
   button {
     color: var(--color-text);
-    font-size: 18px;
+    font-size: var(--font-size);
     background: none;
     border: 1px solid var(--color-text-light);
-    height: 50px;
+    height: calc(var(--font-size) * 3);
     margin: -1px 0 0 -1px;
-    flex: 0 1 160px;
+    flex: 0 1 calc(var(--font-size) * 10);
     outline: none;
   }
   button:focus {
@@ -114,12 +113,12 @@
     display: flex;
     align-items: baseline;
     font-weight: 500;
-    font-size: 32px;
-    line-height: 50px;
+    font-size: calc(var(--font-size) * 2);
+    line-height: calc(var(--font-size) * 3);
     margin: 10px 0;
   }
   section {
-    font-size: 20px;
+    font-size: calc(var(--font-size) * 1.25);
   }
   section .icon-expand {
     display: flex;
@@ -157,8 +156,8 @@
     background-color: var(--color-text);
   }
 
-  section.countries .data,
   section.sessions .data {
+    overflow-x: auto;
     background-color: var(--color-background-light);
   }
 
@@ -167,11 +166,13 @@
   }
   section.sessions aside {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     margin-bottom: 20px;
   }
   section.sessions h2 {
     flex: 1;
+    margin-right: 1rem;
   }
   section.sessions section {
     display: flex;
@@ -179,12 +180,12 @@
     padding-left: 10px;
   }
   section.sessions section h3 {
-    font-size: 18px;
+    font-size: var(--font-size);
     font-weight: 400;
     color: var(--color-text-light);
   }
   section.sessions section span {
-    font-size: 42px;
+    font-size: calc(var(--font-size) * 2.62);
     font-weight: 500;
   }
   section.sessions .visitors {
@@ -201,20 +202,32 @@
     content: '%';
     color: var(--color-text-light);
   }
+  section.countries #worldmap {
+    background-color: var(--color-background-light);
+  }
+  section.countries .countries-grid {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    grid-gap: 2rem;
+    align-items: center;
+    background-color: var(--color-background-light);
+  }
+  @media screen and (max-width: 560px) {
+    :root {
+      --font-size: 10px;
+    }
+    main {
+      gap: 20px;
+    }
+  }
+  @media screen and (max-width: 1148px) {
+    section.countries .countries-grid {
+      grid-template-columns: 1fr;
+      background: none;
+    }
+  }
 </style>
-{{end}} {{define "header"}}
-<header>
-  <h1
-    style="color:var(--color-text);font-size:32px;margin:60px 0 60px 80px;line-height:40px;"
-  >
-    NULLITICS
-  </h1>
-</header>
-{{end}} {{define "footer"}}
-<footer style="margin-top:3rem;text-align:right;">
-  <small>&copy; 2021 - nullitics.com</small>
-</footer>
-{{end}}
+{{end}} {{define "header"}} {{end}} {{define "footer"}} {{end}}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -223,8 +236,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nullitics - zero-effort minimal analytics</title>
     <style></style>
-    {{ template "head" . }}
-    {{ template "extra_head" . }}
+    {{ template "head" . }} {{ template "extra_head" . }}
   </head>
   <body>
     {{ template "header" . }}
@@ -241,18 +253,20 @@
         <section class="sessions">
           <aside>
             <h2>Sessions</h2>
-            <section class="visitors">
-              <h3>visitors</h3>
-              <span>153</span>
-            </section>
-            <section class="views">
-              <h3>views</h3>
-              <span>196</span>
-            </section>
-            <section class="bounce-rate">
-              <h3>bounce rate</h3>
-              <span>78%</span>
-            </section>
+            <aside>
+              <section class="visitors">
+                <h3>visitors</h3>
+                <span>153</span>
+              </section>
+              <section class="views">
+                <h3>views</h3>
+                <span>196</span>
+              </section>
+              <section class="bounce-rate">
+                <h3>bounce rate</h3>
+                <span>78%</span>
+              </section>
+            </aside>
           </aside>
           <div class="data"></div>
         </section>
@@ -272,7 +286,12 @@
         <!-- Countries -->
         <section class="countries">
           <h2>Countries<a class="icon-expand" href="#"></a></h2>
-          <div class="data"></div>
+          <div class="countries-grid">
+            <div id="worldmap" style="padding:40px;"></div>
+            <section class="list">
+              <div class="data"></div>
+            </section>
+          </div>
         </section>
 
         <!-- Devices -->

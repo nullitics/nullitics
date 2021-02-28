@@ -29,7 +29,11 @@ const slice = (start, end, key) => {
   if (buckets <= 1 && end.getTime() === today.getTime()) {
     buckets = 24;
     source = dailyData;
-    fmt = new Intl.DateTimeFormat([], {hour: '2-digit', hourCycle: 'h23', minute:'2-digit'});
+    fmt = new Intl.DateTimeFormat([], {
+      hour: '2-digit',
+      hourCycle: 'h23',
+      minute: '2-digit',
+    });
     increment = HOUR;
   } else {
     from = (start - oldest) / DAY;
@@ -79,9 +83,13 @@ const Graph = () => {
     views[i] = sum;
   }
   const maxViews = views.slice(1).reduce((m, i) => Math.max(i, m), 0);
-  const max = [5,10,25,50,100].find(n => maxViews < n) || Math.ceil(maxViews/50)*50;
+  const max =
+    [5, 10, 25, 50, 100].find(n => maxViews < n) ||
+    Math.ceil(maxViews / 50) * 50;
   const totalViews = sum(views);
-  const bounceRate = totalViews ? Math.round((totalSessions / totalViews) * 100) : 0;
+  const bounceRate = totalViews
+    ? Math.round((totalSessions / totalViews) * 100)
+    : 0;
   document.querySelector('.sessions .visitors span').innerText = totalSessions;
   document.querySelector('.sessions .views span').innerText = totalViews;
   document.querySelector('.sessions .bounce-rate span').innerText = bounceRate;
@@ -106,7 +114,7 @@ const Graph = () => {
         .join('')}
       ${labels
         .map(
-          (label, i) => `<div title="${sessions[i+1]} visitors"
+          (label, i) => `<div title="${sessions[i + 1]} visitors"
           style="background:var(--color-text);
           grid-column:${i + 1}/${i + 1};
           grid-row-start:${(251 - (sessions[i + 1] / max) * 250) | 0};
@@ -114,7 +122,12 @@ const Graph = () => {
         )
         .join('')}
       ${labels
-        .map((label, i) => `<div style="font-size:10px;line-height:25px;place-self:center;grid-row:253;color:var(--color-text-light);grid-column:${i+1}">${label}</div>`).join('')}
+        .map(
+          (label, i) =>
+            `<div style="font-size:10px;line-height:25px;place-self:center;grid-row:253;color:var(--color-text-light);grid-column:${i +
+              1}">${label}</div>`,
+        )
+        .join('')}
   </div>`;
 };
 
@@ -143,26 +156,20 @@ const WorldMap = () => {
   const [countries, total] = rank('Countries');
   const percent = (a, b) => (b === 0 ? 0 : Math.floor((100 * a) / b));
   const svg = new DOMParser().parseFromString(worldMapSVG, 'image/svg+xml');
-  setTimeout(() => {
-    const max = countries.reduce((m, [cn, v]) => Math.max(m, v), 0);
-    const worldmap = document.getElementById('worldmap');
-    worldmap.innerHTML = worldMapSVG;
-    worldmap
-      .querySelector('svg')
-      .setAttributeNS(null, 'fill', 'var(--color-background-map)');
-    countries.map(([cn, v]) => {
-      const el = worldmap.querySelector('#' + cn.toLowerCase());
-      if (el) {
-        el.setAttributeNS(null, 'fill', 'var(--color-map)');
-        el.setAttributeNS(null, 'opacity', `${(0.8 * v) / max + 0.2}`);
-      }
-    });
-  }, 0);
+  const max = countries.reduce((m, [cn, v]) => Math.max(m, v), 0);
+  const worldmap = document.getElementById('worldmap');
+  worldmap.innerHTML = worldMapSVG;
+  worldmap
+    .querySelector('svg')
+    .setAttributeNS(null, 'fill', 'var(--color-background-map)');
+  countries.map(([cn, v]) => {
+    const el = worldmap.querySelector('#' + cn.toLowerCase());
+    if (el) {
+      el.setAttributeNS(null, 'fill', 'var(--color-map)');
+      el.setAttributeNS(null, 'opacity', `${(0.8 * v) / max + 0.2}`);
+    }
+  });
   return `
-        <div style="display:grid;grid-template-columns:3fr 1fr;grid-gap:2rem;align-items:center;">
-          <div id="worldmap" style="margin:40px;"></div>
-          <section class="list">
-            <div class="data">
           ${
             countries.length === 0
               ? '<p>No data</p>'
@@ -181,9 +188,6 @@ const WorldMap = () => {
                   )
                   .join('')
           }
-            </div>
-          </section>
-        </div>
       `;
 };
 
