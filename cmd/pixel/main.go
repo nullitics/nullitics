@@ -36,7 +36,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.Method, r.URL.Path, r.UserAgent(), r.Referer())
 		switch {
-		case strings.HasSuffix(r.URL.Path, "/stats/"):
+		case r.URL.Path == "/":
 			// Show statistics report
 			report.ServeHTTP(w, r)
 		case strings.HasSuffix(r.URL.Path, ".js"):
@@ -49,6 +49,6 @@ func main() {
 		}
 	})
 
-	log.Println("Started on port " + *port + ", check " + *url + "/stats/")
+	log.Println("Started on port " + *port + ", check " + *url)
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
