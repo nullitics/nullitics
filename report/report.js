@@ -18,10 +18,13 @@ const extend = (a, from, n) => zeros(n).map((_, i) => a[from + i] || 0);
 const framify = ({Rows}, from, n) =>
   Rows.map(({Name, Values}) => [Name, ...extend(Values, from, n)]);
 
+// Format large numbers
+const numfmt = n => n < 1000 ? n : `${(n/1000).toFixed(1)}k`
+
 const slice = (start, end, key) => {
   start.setHours(0, 0, 0, 0);
   end.setHours(0, 0, 0, 0);
-  let buckets = Math.max((end - start) / DAY, 0);
+  let buckets = Math.max(Math.ceil((end - start) / DAY), 0);
   let from = 0;
   let source = fullData;
   let fmt = new Intl.DateTimeFormat([], {day: 'numeric', month: 'short'});
@@ -36,7 +39,7 @@ const slice = (start, end, key) => {
     });
     increment = HOUR;
   } else {
-    from = (start - oldest) / DAY;
+    from = Math.ceil((start - oldest) / DAY);
   }
   const labels = zeros(buckets).map((_, i) =>
     fmt.format(new Date(start.getTime() + increment * i)),
@@ -82,7 +85,7 @@ const Graph = () => {
     }
     views[i] = sum;
   }
-  const maxViews = views.slice(1).reduce((m, i) => Math.max(i, m), 0);
+  const maxViews = views.reduce((m, i) => Math.max(i, m), 0);
   const max =
     [5, 10, 25, 50, 100].find(n => maxViews < n) ||
     Math.ceil(maxViews / 50) * 50;
@@ -90,8 +93,8 @@ const Graph = () => {
   const bounceRate = totalViews
     ? Math.round((totalSessions / totalViews) * 100)
     : 0;
-  document.querySelector('.sessions .visitors span').innerText = totalSessions;
-  document.querySelector('.sessions .views span').innerText = totalViews;
+  document.querySelector('.sessions .visitors span').innerText = numfmt(totalSessions);
+  document.querySelector('.sessions .views span').innerText = numfmt(totalViews);
   document.querySelector('.sessions .bounce-rate span').innerText = bounceRate;
 
   return `
@@ -105,7 +108,7 @@ const Graph = () => {
       <div style="border-bottom:1px solid var(--color-background-grey);grid-row:50;grid-column:1/-1;"></div>
       ${labels
         .map(
-          (label, i) => `<div title="${views[i]} views"
+          (label, i) => `<div title="${numfmt(views[i])} views"
           style="background:var(--color-accent);
           grid-column:${i + 1}/${i + 1};
           grid-row-start:${(251 - (views[i] / max) * 250) | 0};
@@ -114,7 +117,7 @@ const Graph = () => {
         .join('')}
       ${labels
         .map(
-          (label, i) => `<div title="${sessions[i + 1]} visitors"
+          (label, i) => `<div title="${numfmt(sessions[i + 1])} visitors"
           style="background:var(--color-text);
           grid-column:${i + 1}/${i + 1};
           grid-row-start:${(251 - (sessions[i + 1] / max) * 250) | 0};
@@ -139,7 +142,7 @@ const List = (name, limit) => {
   }
   const listItem = ([name, count]) => `
     <span class="record">${name}</span>
-    <span class="count">${count}</span>
+    <span class="count">${numfmt(count)}</span>
     <span class="percent">${percent(count, total)}%</span>
     <span class="bar"><span style="width:${Math.max(
       1,
