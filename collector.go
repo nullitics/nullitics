@@ -80,7 +80,8 @@ func (c *Collector) Hit(hit *Hit) error {
 	if err := c.checkAppender(false); err != nil {
 		return err
 	}
-	if startTime := c.appender.StartTime(); date(hit.Timestamp) != date(startTime) && !startTime.IsZero() {
+	startTime := c.appender.StartTime().In(c.location)
+	if date(hit.Timestamp.In(c.location)) != date(startTime) && !startTime.IsZero() {
 		if err := c.closeAppender(); err != nil {
 			return err
 		} else if err := c.checkHistoricalStats(); err != nil {
