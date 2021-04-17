@@ -1,8 +1,8 @@
 package nullitics
 
 import (
+	"embed"
 	_ "embed" // embed package must be imported for embedded FS to work
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -254,7 +254,7 @@ func (c *Collector) report(w io.Writer, extra interface{}) error {
 	if err != nil {
 		return err
 	}
-	return ReportTemplate.Execute(w, struct {
+	return ReportTemplate.ExecuteTemplate(w, "index.html", struct {
 		Daily   *Stats
 		History *Stats
 		Extra   interface{}
@@ -272,25 +272,11 @@ func RandomString(n int) string {
 }
 
 var (
-	//go:embed report/report.html
-	reportHTML string
-	//go:embed report/report.js
-	reportJS string
-	//go:embed report/worldmap.svg
-	worldMapSVG string
-
-	fullTemplate = fmt.Sprintf(`
-		{{define "script"}}
-		<script type="text/javascript">
-		const worldMapSVG = %q;
-		const fullData = {{ .History }};
-		const dailyData = {{ .Daily }};
-		%s
-		</script>
-		{{end}}`, worldMapSVG, reportJS) + reportHTML
+	//go:embed report
+	report embed.FS
 
 	// ReportTemplate is a http/template.Template for the default dashboard UI.
-	// Feel free to customize it to your own needs by providing the {{head}},
-	// {{extra_head}}, {{header}} or {{footer}} sections.
-	ReportTemplate = template.Must(template.New("").Parse(fullTemplate))
+	// Feel free to customize it to your own needs by providing the {{extra_head}},
+	// {{header}} or {{footer}} sections.
+	ReportTemplate = template.Must(template.ParseFS(report, "report/*.*", "report/components/*.*"))
 )

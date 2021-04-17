@@ -1,0 +1,114 @@
+<template id="template-graph">
+    <div class="graph">
+    </div>
+    <style>
+        .graph {
+            display: grid;
+            height: 100%;
+            width: 100%;
+            grid-template-columns: 40px repeat(10, 1fr);
+            grid-template-rows: repeat(250, 1fr) 10px auto;
+            grid-column-gap: 10px;
+        }
+
+        .label {
+            color: var(--color-label, black);
+            font-size: var(--font-size-label, 1rem);
+            place-self: center;
+            text-align: center;
+        }
+    </style>
+</template>
+<script>
+    customElements.define('nu-graph', class extends HTMLElement {
+        constructor() {
+            super();
+            this.shadow = this.attachShadow({ mode: 'open' });
+            this.shadow.appendChild(document.getElementById('template-graph').content.cloneNode(true));
+            this._points = [];
+            this._labels = [];
+        }
+        static get observedAttributes() {
+            return ['points', 'labels'];
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+            if (name === 'points') {
+                this.points = JSON.parse(newValue);
+            } else if (name === 'labels') {
+                this.labels = JSON.parse(newValue);
+            }
+        }
+        get points() {
+            return this._points;
+        }
+        set points(points) {
+            this._points = points;
+            this.render();
+        }
+        get labels() {
+            return this._labels;
+        }
+        set labels(labels) {
+            this._labels = labels;
+            this.render();
+        }
+        render() {
+            const labels = this._labels;
+            const points = this._points;
+            const tooltips = JSON.parse(this.getAttribute("tooltips"));
+            const colors = JSON.parse(this.getAttribute("colors"));
+            const graph = this.shadow.querySelector('.graph');
+            graph.style.gridTemplateColumns = `40px repeat(${labels.length},1fr)`;
+            graph.innerHTML = '';
+            const maxFn = (m, i) => Math.max(m, i);
+            const maxValue = points.map(values => values.reduce(maxFn, 0)).reduce(maxFn, 0);
+            const max = (() => {
+                const steps = [1, 2, 2.5, 5];
+                for (let e = 0;;e++) {
+                    for (let i = 0; i < steps.length; i++) {
+                        const step = 10**e * steps[i];
+                        if (step !== (step|0)) { // skip non-integer steps
+                            continue;
+                        }
+                        if (step * 5 > maxValue) {
+                            return step * 5;
+                        }
+                    }
+                }
+            })();
+            for (let line = 4; line > 0; line--) {
+                const axis = document.createElement('div');
+                axis.style.gridRow = 50 * line + 1;
+                axis.style.gridColumn = '2/-1';
+                axis.style.borderTop = `1px solid var(--color-axis)`;
+                graph.appendChild(axis);
+                const label = document.createElement('div');
+                label.style.gridRow = `${50 * line - 25}/${50 * line + 25}`;
+                label.style.gridColumn = '1/1';
+                label.className = 'label';
+                label.textContent = `${numfmt((5 - line) * max / 5)}`;
+                graph.appendChild(label);
+            }
+            labels.forEach((label, i) => {
+                points.forEach((values, order) => {
+                    const value = values[i];
+                    const el = document.createElement('div');
+                    el.setAttribute("title", tooltips[order].replace(/\$n/g, value));
+                    el.style.backgroundColor = `var(--color-${order + 1}, black)`;
+                    el.style.gridColumn = `${i + 2}/${i + 2}`;
+                    el.style.gridRowStart = `${-Math.floor((value / max) * 250) - 4}`;
+                    el.style.gridRowEnd = '-3'
+                    graph.appendChild(el);
+                });
+                const el = document.createElement('div');
+                el.className = "label";
+                el.style.gridRow = '-1';
+                el.style.gridColumn = `${i + 2}`;
+                el.textContent = label;
+                graph.appendChild(el);
+            });
+        }
+    });
+</script>
+
+<!-- <nu-graph labels='["a", "b", "c", "d", "e", "f"]' points='[[8,4,7,10,5,9],[5,3,7,8,1,7]]' colors='["yellow","red"]' tooltips='["$n visitors","$n views"]'></nu-graph> -->

@@ -1,0 +1,91 @@
+<template id="template-panel">
+    <section class="paths list">
+        <aside>
+            <h2><span></span><a class="icon-expand"></a></h2>
+            <slot name="header"></slot>
+        </aside>
+        <slot></slot>
+    </section>
+    <style>
+        :host {
+            --font-size: 16px;
+        }
+
+        aside {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        section h2 {
+            display: flex;
+            flex: 1;
+            align-items: baseline;
+            font-weight: 500;
+            font-size: calc(var(--font-size) * 2);
+            line-height: calc(var(--font-size) * 3);
+            margin: 10px 1rem 10px 0;
+        }
+        section {
+            font-size: calc(var(--font-size) * 1.25);
+        }
+        section .icon-expand {
+            cursor: pointer;
+            display: flex;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18.5714 18.5714H1.42859V1.42859H10V0H0.714293C0.319468 0 0 0.319468 0 0.714293V19.2857C0 19.6805 0.319468 20 0.714293 20H19.2857C19.6805 20 20 19.6805 20 19.2857V10H18.5714V18.5714Z' fill='currentColor'/%3E%3Cpath d='M12.8573 0V1.42859H17.5615L9.49512 9.49497L10.5052 10.505L18.5715 2.43863V7.14285H20.0001V0L12.8573 0Z' fill='currentColor'/%3E%3C/svg%3E%0A");
+        }
+    </style>
+</template>
+<script>
+    customElements.define('nu-panel', class extends HTMLElement {
+        constructor() {
+            super();
+            const template = document.getElementById('template-panel').content;
+            this.shadow = this.attachShadow({ mode: 'open' });
+            this.shadow.appendChild(template.cloneNode(true));
+            this.heading = '';
+            this.expandable = false;
+        }
+        connectedCallback() {
+            this.shadow.querySelector('a.icon-expand').onclick = () => {
+                this.dispatchEvent(new CustomEvent('expand'))
+                this.onexpand ? this.onexpand() : eval(this.getAttribute('onexpand'));
+            };
+        }
+        static get observedAttributes() {
+            return ['heading', 'expandable'];
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+            if (name === 'heading') {
+                this.heading = newValue;
+            } else if (name === 'expandable') {
+                this.expandable = (newValue === 'true');
+            }
+            this.render();
+        }
+        set heading(heading) {
+            this._heading = heading;
+        }
+        get heading() {
+            return this._heading;
+        }
+        set expandable(expandable) {
+            this._expandable = expandable;
+        }
+        get expandable() {
+            return this._expandable;
+        }
+        render() {
+            this.shadow.querySelector('h2 span').textContent = this._heading;
+            this.shadow.querySelector('.icon-expand').style.display = this._expandable ? 'inline-block' : 'none';
+        }
+    });
+</script>
+
+<!-- Example: -->
+<!-- <nu-panel heading="Hello" expandable=true>
+    <p>Hello, world!</p>
+</nu-panel> -->

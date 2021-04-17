@@ -1,0 +1,96 @@
+<template id="template-table">
+    <section class="nu-table"></section>
+    <style>
+        :host {
+            --color-text: #222222;
+            --color-text-light: #929eb0;
+            --color-background-grey: #e9ecf1;
+        }
+        .nu-table {
+            width: 100%;
+            display: grid;
+            grid-template-columns: auto 40px 40px 70px;
+            grid-template-rows: auto;
+            grid-gap: 5px 20px;
+        }
+        .nu-table .record {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .nu-table .count {
+            font-weight: 600;
+            text-align: right;
+        }
+        .nu-table .percent {
+            text-align: right;
+            color: var(--color-text-light);
+        }
+        .nu-table .bar {
+            display: flex;
+            background-color: var(--color-background-grey);
+            margin: 5px 30px 5px 0;
+        }
+        .nu-table .bar span {
+            display: inline-block;
+            background-color: var(--color-text);
+        }
+    </style>
+</template>
+<script>
+    const numfmt = n => n < 1000 ? n : `${(n / 1000).toFixed(1)}k`;
+    const percent = (a, b) => (b === 0 ? 0 : Math.floor((100 * a) / b));
+
+    customElements.define('nu-table', class extends HTMLElement {
+        constructor() {
+            super();
+            const template = document.getElementById('template-table').content;
+            this.shadow = this.attachShadow({ mode: 'open' });
+            this.shadow.appendChild(template.cloneNode(true));
+        }
+        static get observedAttributes() {
+            return ['items', 'limit'];
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+            if (name === 'items') {
+                this.items = JSON.parse(newValue);
+            } else if (name === 'limit') {
+                this.limit = +newValue;
+            }
+        }
+        get items() {
+            return this._items;
+        }
+        set items(items) {
+            this._items = items;
+            this.render();
+        }
+        render() {
+            const items = this._items;
+            const keys = Object.keys(items);
+            if (keys.length === 0) {
+                this.shadow.querySelector('section').innerHTML = '<p>No data</p>';
+                return;
+            }
+            const total = keys.reduce((sum, key) => sum + items[key], 0);
+            this.shadow.querySelector('section').innerHTML = '';
+            keys.sort((a, b) => items[b] - items[a]);
+            let html = '';
+            keys.slice(0, this.limit).forEach(key => {
+                const n = items[key];
+                // TODO: use appendChild()
+                html += `<span class="record">${key}</span>
+                <span class="count">${numfmt(n)}</span>
+                <span class="percent">${percent(n, total)}%</span>
+                <span class="bar">
+                       <span style="width:${Math.max(1, percent(n, total))}%"></span>
+                </span>
+                `;
+            });
+            this.shadow.querySelector('section').innerHTML = html;
+        }
+    });
+</script>
+
+<!-- Example: -->
+<!-- <nu-table items='{"/foo": 30, "/bar": 50, "/baz": 20}'></nu-table> -->

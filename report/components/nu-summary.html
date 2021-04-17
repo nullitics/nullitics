@@ -1,0 +1,112 @@
+<template id="template-summary">
+    <aside>
+        <section class="visitors">
+            <h3>visitors</h3>
+            <span>0</span>
+        </section>
+        <section class="views">
+            <h3>views</h3>
+            <span>0</span>
+        </section>
+        <section class="bounce-rate">
+            <h3>bounce rate</h3>
+            <span>0</span>
+        </section>
+    </aside>
+    <style>
+        :host {
+            --font-size: 16px;
+            --color-text: #222222;
+            --color-text-light: #929eb0;
+            --color-accent: #fddd34;
+        }
+
+        aside {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        section {
+            display: flex;
+            flex-direction: column;
+            padding-left: 10px;
+        }
+
+        h3 {
+            font-size: var(--font-size);
+            font-weight: 400;
+            color: var(--color-text-light);
+            margin: 0;
+            padding: 0;
+        }
+
+        span {
+            font-size: calc(var(--font-size) * 2.62);
+            font-weight: 500;
+        }
+
+        .visitors {
+            border-left: 4px solid var(--color-text);
+        }
+
+        .views {
+            margin-left: 50px;
+            border-left: 4px solid var(--color-accent);
+        }
+
+        .bounce-rate {
+            margin-left: 30px;
+        }
+
+        .bounce-rate span::after {
+            content: '%';
+            color: var(--color-text-light);
+        }
+    </style>
+</template>
+<script>
+    customElements.define('nu-summary', class extends HTMLElement {
+        constructor() {
+            super();
+            const template = document.getElementById('template-summary').content;
+            this.shadow = this.attachShadow({ mode: 'open' });
+            this.shadow.appendChild(template.cloneNode(true));
+        }
+        static get observedAttributes() {
+            return ['visitors', 'views'];
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+            if (name === 'visitors') {
+                this.visitors = +newValue;
+            } else if (name === 'views') {
+                this.views = +newValue;
+            }
+        }
+        set visitors(visitors) {
+            this._visitors = visitors;
+            this.render();
+        }
+        get visitors() {
+            return this._visitors;
+        }
+        set views(views) {
+            this._views = views;
+            this.render();
+        }
+        get views() {
+            return this._views;
+        }
+        render() {
+            const numfmt = n => n < 1000 ? n : `${(n / 1000).toFixed(1)}k`;
+            const percent = (a, b) => (b === 0 ? 0 : Math.floor((100 * a) / b));
+            this.shadow.querySelector('.visitors span').textContent = numfmt(this._visitors);
+            this.shadow.querySelector('.views span').textContent = numfmt(this._views);
+            this.shadow.querySelector('.bounce-rate span').textContent = percent(this.visitors, this._views);
+        }
+    });
+</script>
+
+<!-- Example: -->
+<!-- <nu-summary visitors="1234" views="1545"></nu-summary> -->

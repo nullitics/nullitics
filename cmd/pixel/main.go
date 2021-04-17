@@ -42,7 +42,7 @@ func main() {
 		case strings.HasSuffix(r.URL.Path, ".js"):
 			// Return a JS snippet
 			w.Header().Add("Content-Type", "application/javascript")
-			fmt.Fprintf(w, `new Image().src='`+*url+`/null.gif?r='+encodeURI(document.referrer)+'&d='+screen.width`)
+			fmt.Fprintf(w, `new Image().src='`+*url+`/null.gif?u='+encodeURI(location.href)+'&r='+encodeURI(document.referrer)+'&d='+screen.width`)
 		case strings.HasSuffix(r.URL.Path, ".gif"):
 			// Serve a tracking pixel and record a hit
 			c.ServeHTTP(w, r)

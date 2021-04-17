@@ -1,0 +1,86 @@
+/* Variables */
+:root {
+  --font-size: 16px;
+  --color-text: #222222;
+  --color-text-light: #929eb0;
+  --color-background-grey: #e9ecf1;
+  --color-background-light: #f6f7f9;
+  --color-background-map: #e9ecf1;
+  --color-map: #333333;
+  --color-background: #ffffff;
+  --color-accent: #fddd34;
+}
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text: #ffffff;
+    --color-text-light: #cccccc;
+    --color-background-grey: #888888;
+    --color-background-light: #333333;
+    --color-background: #222222;
+    --color-map: #fddd34;
+    --color-background-map: #888888;
+    --color-accent: #fddd34;
+  }
+}
+*/
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Oxygen, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+input,
+button,
+select {
+  font: inherit;
+}
+
+.countries-grid {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  grid-gap: 2rem;
+  align-items: center;
+  background-color: var(--color-background-light);
+}
+.countries-grid nu-worldmap {
+  padding: 40px;
+}
+@media screen and (max-width: 560px) {
+  :root {
+    --font-size: 10px;
+  }
+  main {
+    gap: 20px;
+  }
+}
+@media screen and (max-width: 1148px) {
+  .countries-grid {
+    grid-template-columns: 1fr;
+    background: none;
+  }
+  .countries-grid nu-worldmap {
+    background-color: var(--color-background-light);
+  }
+}
+
+nu-graph {
+  --color-1: var(--color-accent);
+  --color-2: var(--color-text);
+  --color-label: var(--color-text-light);
+  --color-axis: var(--color-background-grey);
+  --font-size-label: 10px;
+}
+
+.sessions .graph-wrapper {
+  overflow-x: auto;
+  background-color: var(--color-background-light);
+  padding: 60px;
+}

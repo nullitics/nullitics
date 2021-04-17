@@ -1,0 +1,99 @@
+<template id="template-date-range">
+    <nav>
+        <button class="today">Today</button>
+        <button class="month">Last 30 days</button>
+        <button class="custom">Custom range</button>
+        <nu-modal heading="Date range">
+            <section>
+                <label for="date-from">Start date:</label>
+                <input id="date-to" class="from" type="date">
+                <label for="date-to">End date:</label>
+                <input id="date-from" class="to" type="date">
+            </section>
+        </nu-modal>
+    </nav>
+    <style>
+        :host {
+            --font-size: 16px;
+            --color-text: #222222;
+            --color-text-light: #929eb0;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            color: var(--color-text);
+            font-size: var(--font-size);
+            background: none;
+            border: 1px solid var(--color-text-light);
+            height: calc(var(--font-size) * 3);
+            margin: -1px 0 0 -1px;
+            flex: 0 1 calc(var(--font-size) * 10);
+            outline: none;
+        }
+
+        button.active,
+        button:focus {
+            z-index: 1;
+            border: 2px solid var(--color-text);
+        }
+        section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        section > p { grid-column: 1/-1; color: var(--color-text-light); }
+    </style>
+</template>
+<script>
+    // Round Date object down to midnight
+    const day = date => {
+        const d = new Date(date.getTime());
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+    // Format Date object as YYYY-MM-dd
+    const formatDate = date => `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+
+    customElements.define('nu-date-range', class extends HTMLElement {
+        constructor() {
+            super();
+            const template = document.getElementById('template-date-range').content;
+            this.shadow = this.attachShadow({ mode: 'open' });
+            this.shadow.appendChild(template.cloneNode(true));
+
+            const today = day(new Date());
+            const lastMonth = new Date();
+            lastMonth.setDate(today.getDate() - 30);
+
+            this.from = lastMonth;
+            this.to = today;
+
+            const setRange = (from, to) => {
+                this.from = day(new Date(from));
+                this.to = day(new Date(to));
+                this.dispatchEvent(new CustomEvent('datechange', { from: this.from, to: this.to }));
+                this.ondatechange ? this.ondatechange() : eval(this.getAttribute('ondatechange'));
+            };
+
+            const modal = this.shadow.querySelector('nu-modal');
+            const fromEl = this.shadow.querySelector('.from');
+            const toEl = this.shadow.querySelector('.to');
+            this.shadow.querySelector('.today').onclick = () => setRange(today, today);
+            this.shadow.querySelector('.month').onclick = () => setRange(lastMonth, today);
+            this.shadow.querySelector('.custom').onclick = () => {
+                fromEl.value = formatDate(this.from);
+                toEl.value = formatDate(this.to);
+                modal.visible = true;
+            }
+            modal.addEventListener('ok', () => {
+                setRange(fromEl.value, toEl.value);
+            });
+        }
+    });
+</script>

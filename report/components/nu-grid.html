@@ -1,0 +1,33 @@
+<template id="template-grid">
+    <main>
+        <slot></slot>
+    </main>
+    <style>
+        main {
+            max-width: 1148px;
+            margin: 0 auto;
+            padding: 60px 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto;
+            gap: 60px 160px;
+        }
+        @media screen and (max-width: 1200px) {
+            main {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+        main > ::slotted([wide]) {
+            grid-column: 1/-1;
+        }
+    </style>
+</template>
+<script>
+    customElements.define('nu-grid', class extends HTMLElement {
+        constructor() {
+            super();
+            this.shadow = this.attachShadow({ mode: 'open' });
+            this.shadow.appendChild(document.getElementById('template-grid').content.cloneNode(true));
+        }
+    });
+</script>

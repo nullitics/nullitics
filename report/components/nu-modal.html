@@ -1,0 +1,191 @@
+<template id="template-modal">
+    <div class='overlay'>
+        <div class='modal'>
+            <h1><span></span><a class="icon-close"></a></h1>
+            <section class="content">
+                <slot></slot>
+            </section>
+            <div class='button-container'>
+                <button class='cancel'>Cancel</button>
+                <button class='ok' primary>OK</button>
+            </div>
+        </div>
+    </div>
+    <style>
+        :host {
+            --overlay-color: rgba(0, 0, 0, 0.7);
+            --modal-color: #ffffff;
+            --dialog-shadow: 0px 20px 50px rgba(0, 0, 0, 0.25);
+            --text-color: #222222;
+        }
+
+        .overlay {
+            display: grid;
+            grid-template-columns: auto minmax(0, 740px) auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--overlay-color);
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(1.05);
+            transition: visibility 0s linear .15s, opacity .15s 0s, transform .15s;
+            z-index: 1;
+        }
+
+        .visible {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            transition: visibility 0s linear 0s, opacity .15s 0s, transform .15s;
+        }
+
+        .modal {
+            place-self: center;
+            display: flex;
+            grid-area: 1/2/1/2;
+            margin: 20px;
+            flex-direction: column;
+            position: relative;
+            padding: 30px 60px 40px 50px;
+            background-color: var(--modal-color);
+            box-shadow: var(--modal-shadow);
+            max-height: calc(100vh - 110px);
+        }
+
+        .content {
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 500;
+            line-height: 48px;
+            align-items: baseline;
+            margin: 10px 0;
+            display: flex;
+        }
+
+        h1 span {
+            flex: 1;
+            margin-right: 3rem;
+        }
+
+        .icon-close {
+            cursor: pointer;
+            display: flex;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C/line%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C/line%3E%3C/svg%3E");
+        }
+
+        .button-container {
+            margin-top: 1.5rem;
+            text-align: right;
+        }
+
+        button {
+            cursor: pointer;
+            line-height: 40px;
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            text-align: center;
+            font-size: 16px;
+            display: inline-block;
+            background: none;
+            min-width: 200px;
+        }
+        button[primary] {
+            font-weight: 900;
+            border: 2px solid var(--color-accent);
+            background-color: var(--color-accent);
+        }
+    </style>
+</template>
+<script>
+    customElements.define('nu-modal', class extends HTMLElement {
+        constructor() {
+            super();
+            const template = document.getElementById('template-modal').content;
+            this.shadow = this.attachShadow({ mode: 'open' });
+            this.shadow.appendChild(template.cloneNode(true));
+        }
+        connectedCallback() {
+            const close = event => e => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.removeAttribute('visible');
+                this.dispatchEvent(new CustomEvent(event))
+                this[`on${event}`] ? this[`on${event}`]() : eval(this.getAttribute(`on${event}`));
+            }
+            const ok = close('ok');
+            const cancel = close('cancel');
+            this.shadowRoot.querySelector(".modal").addEventListener('click', e => {
+                e.stopPropagation();
+            });
+            this.shadowRoot.querySelector(".overlay").addEventListener('click', close('cancel'));
+            this.shadowRoot.querySelector(".icon-close").addEventListener('click', close('cancel'));
+            this.shadowRoot.querySelector(".cancel").addEventListener('click', close('cancel'));
+            this.shadowRoot.querySelector(".ok").addEventListener('click', close('ok'));
+            this.onEscapeKey = e => {
+                if (e.keyCode === 27) {
+                    cancel(e);
+                } else if (e.keyCode == 13) {
+                    ok(e);
+                }
+            };
+            document.addEventListener('keydown', this.onEscapeKey);
+        }
+        disconnectedCallback() {
+            document.removeEventListener('keydown', this.onEscapeKey);
+        }
+        get heading() {
+            return this.getAttribute("heading");
+        }
+        set heading(value) {
+            this.setAttribute("heading", value);
+        }
+        get visible() {
+            return this.hasAttribute("visible");
+        }
+        set visible(value) {
+            if (value) {
+                this.setAttribute("visible", "");
+            } else {
+                this.removeAttribute("visible");
+            }
+        }
+        static get observedAttributes() {
+            return ["visible", "heading", "mode"];
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+            if (name === "heading") {
+                this.shadowRoot.querySelector("h1 span").textContent = newValue;
+            }
+            if (name === "visible") {
+                if (newValue === null) {
+                    this.shadowRoot.querySelector(".overlay").classList.remove("visible");
+                } else {
+                    this.shadowRoot.querySelector(".overlay").classList.add("visible");
+                }
+            }
+            if (name === 'mode') {
+                if (newValue === "none") {
+                    this.shadowRoot.querySelector(".ok").style.display = 'none';
+                    this.shadowRoot.querySelector(".cancel").style.display = 'none';
+                } else if (newValue == 'ok') {
+                    this.shadowRoot.querySelector(".ok").style.display = 'inline-block';
+                    this.shadowRoot.querySelector(".cancel").style.display = 'none';
+                } else if (newValue == 'ok-cancel') {
+                    this.shadowRoot.querySelector(".ok").style.display = 'inline-block';
+                    this.shadowRoot.querySelector(".cancel").style.display = 'inline-block';
+                }
+            }
+        }
+    });
+</script>
+
+<!-- <nu-modal title="How are you?" visible><p>Hey there!</p></nu-modal> -->
