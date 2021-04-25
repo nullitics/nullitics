@@ -409,7 +409,7 @@
             const fg = this.shadow.host.style.color || 'black';
             const labels = Object.keys(items);
             const max = labels.reduce((m, cn) => Math.max(m, items[cn]), 0);
-            const regionNames = new Intl.DisplayNames([], { type: 'region' });
+            const regionNames = Intl.DisplayNames ? new Intl.DisplayNames([], { type: 'region' }) : {of: cn => cn};
             this.shadow.querySelectorAll('svg > *').forEach(el => {
                 const countryCode = el.getAttribute('class').toUpperCase();
                 const value = items[countryCode] || 0;
