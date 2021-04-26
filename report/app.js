@@ -66,15 +66,15 @@ const render = () => {
       el.items = sliceMap(from, to, el.dataset.filter);
   });
   const sum = v => v.reduce((a, i) => a + i, 0);
-  const [[sessions = []], labels] = slice(from, to, 'Sessions');
-  const totalSessions = sum(sessions.slice(1));
-
-  const [paths] = slice(from, to, 'URIs');
+  const [paths, labels] = slice(from, to, 'URIs');
+  const [[sessions = zeros(labels.length+1)]] = slice(from, to, 'Sessions');
   const views = labels.map((_, i) => paths.reduce((a, p) => a + p[i+1], 0));
+  const totalSessions = sum(sessions.slice(1));
   const totalViews = sum(views);
 
   document.querySelector('nu-summary').visitors = totalSessions;
   document.querySelector('nu-summary').views = totalViews;
+	console.log(labels, views, sessions);
 
   document.querySelector('nu-graph').labels = labels;
   document.querySelector('nu-graph').points = [views, sessions.slice(1)];
