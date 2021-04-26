@@ -15,7 +15,7 @@
     </aside>
     <style>
         :host {
-            --font-size: 16px;
+            --summary-font-size: var(--font-size, 16px);
             --color-text: #222222;
             --color-text-light: #929eb0;
             --color-accent: #fddd34;
@@ -35,7 +35,7 @@
         }
 
         h3 {
-            font-size: var(--font-size);
+            font-size: var(--summary-font-size);
             font-weight: 400;
             color: var(--color-text-light);
             margin: 0;
@@ -43,7 +43,7 @@
         }
 
         span {
-            font-size: calc(var(--font-size) * 2.62);
+            font-size: calc(var(--summary-font-size) * 2.62);
             font-weight: 500;
         }
 

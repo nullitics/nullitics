@@ -13,6 +13,9 @@
             grid-template-rows: auto;
             grid-gap: 5px 20px;
         }
+        .nu-table .no-data {
+            grid-column: 1/-1;
+        }
         .nu-table .record {
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -69,7 +72,7 @@
             const items = this._items;
             const keys = Object.keys(items);
             if (keys.length === 0) {
-                this.shadow.querySelector('section').innerHTML = '<p>No data</p>';
+                this.shadow.querySelector('section').innerHTML = '<p class="no-data">No data</p>';
                 return;
             }
             const total = keys.reduce((sum, key) => sum + items[key], 0);
