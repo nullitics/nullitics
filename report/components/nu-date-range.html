@@ -14,7 +14,7 @@
     </nav>
     <style>
         :host {
-            --font-size: 16px;
+            --base-font-size: var(--font-size, 16px);
             --color-text: #222222;
             --color-text-light: #929eb0;
         }
@@ -28,12 +28,12 @@
 
         button {
             color: var(--color-text);
-            font-size: var(--font-size);
+            font-size: var(--base-font-size);
             background: none;
             border: 1px solid var(--color-text-light);
-            height: calc(var(--font-size) * 3);
+            height: calc(var(--base-font-size) * 3);
             margin: -1px 0 0 -1px;
-            flex: 0 1 calc(var(--font-size) * 10);
+            flex: 0 1 calc(var(--base-font-size) * 10);
             outline: none;
         }
 
@@ -71,28 +71,47 @@
             const lastMonth = new Date();
             lastMonth.setDate(today.getDate() - 30);
 
-            this.from = lastMonth;
-            this.to = today;
+            try {
+                const {to, from, mode} = JSON.parse(window.localStorage['nu-date-range-selection']);
+                switch (mode) {
+                  case 'today':
+                      this.from = this.to = today;
+                      break;
+                  case 'month':
+                      this.from = lastMonth;
+                      this.to = today;
+                      break;
+                  case 'custom':
+                      this.from = new Date(from);
+                      this.to = new Date(to);
+                      break;
+                  default:
+                      throw new Error('bad mode: '+mode);
+                }
+            } catch (e) {
+              this.from = this.to = today;
+            }
 
-            const setRange = (from, to) => {
+            const setRange = (from, to, mode) => {
                 this.from = day(new Date(from));
                 this.to = day(new Date(to));
                 this.dispatchEvent(new CustomEvent('datechange', { from: this.from, to: this.to }));
                 this.ondatechange ? this.ondatechange() : eval(this.getAttribute('ondatechange'));
+                window.localStorage['nu-date-range-selection'] = JSON.stringify({mode, from, to});
             };
 
             const modal = this.shadow.querySelector('nu-modal');
             const fromEl = this.shadow.querySelector('.from');
             const toEl = this.shadow.querySelector('.to');
-            this.shadow.querySelector('.today').onclick = () => setRange(today, today);
-            this.shadow.querySelector('.month').onclick = () => setRange(lastMonth, today);
+            this.shadow.querySelector('.today').onclick = () => setRange(today, today, 'today');
+            this.shadow.querySelector('.month').onclick = () => setRange(lastMonth, today, 'month');
             this.shadow.querySelector('.custom').onclick = () => {
                 fromEl.value = formatDate(this.from);
                 toEl.value = formatDate(this.to);
                 modal.visible = true;
             }
             modal.addEventListener('ok', () => {
-                setRange(fromEl.value, toEl.value);
+                setRange(fromEl.value, toEl.value, 'custom');
             });
         }
     });
