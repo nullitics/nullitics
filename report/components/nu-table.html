@@ -38,6 +38,14 @@
             display: inline-block;
             background-color: var(--color-text);
         }
+        @media screen and (max-width: 560px ) {
+          .nu-table { grid-template-columns: auto 32px 32px; }
+          .nu-table .bar { display: none; }
+        }
+        @media screen and (max-width: 350px ) {
+          .nu-table { grid-template-columns: auto 32px; }
+          .nu-table .percent, .nu-table .bar { display: none; }
+        }
     </style>
 </template>
 <script>

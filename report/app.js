@@ -74,8 +74,6 @@ const render = () => {
 
   document.querySelector('nu-summary').visitors = totalSessions;
   document.querySelector('nu-summary').views = totalViews;
-	console.log(labels, views, sessions);
-
   document.querySelector('nu-graph').labels = labels;
   document.querySelector('nu-graph').points = [views, sessions.slice(1)];
 };
