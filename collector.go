@@ -36,15 +36,31 @@ var (
 // Collector is an abstracton that records Hits and provides collected Stats.
 type Collector struct {
 	sync.Mutex
-	dir      string
-	location *time.Location
-	salt     string
-	appender *Appender
-	history  *Stats
+	dir       string
+	location  *time.Location
+	blacklist func(string) bool
+	salt      string
+	appender  *Appender
+	history   *Stats
 }
 
 // Option is a function option data type for Collector.
 type Option func(c *Collector)
+
+// Blacklist ignores certain URIs using a custom filtering function.
+func Blacklist(b func(string) bool) Option { return func(c *Collector) { c.blacklist = b } }
+
+// BlacklistPrefix ignores certain URIs by prefix.
+func BlacklistPrefix(blacklist ...string) Option {
+	return Blacklist(func(u string) bool {
+		for _, s := range blacklist {
+			if strings.HasPrefix(u, s) {
+				return true
+			}
+		}
+		return false
+	})
+}
 
 // Dir sets the collector working directory.
 func Dir(dir string) Option { return func(c *Collector) { c.dir = dir } }
@@ -71,8 +87,7 @@ func date(t time.Time) time.Time {
 
 // Hit records a single hit data.
 func (c *Collector) Hit(hit *Hit) error {
-	// TODO: add blacklisting logic
-	if filepath.Ext(hit.URI) != "" || strings.Contains(hit.URI, "/_") {
+	if c.blacklist != nil && c.blacklist(hit.URI) {
 		return nil
 	}
 	c.Lock()
